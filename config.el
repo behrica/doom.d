@@ -105,11 +105,106 @@
     "C-SPC"   #'company-complete-common
     "TAB"     #'company-complete-common-or-cycle
     [tab]     #'company-complete-common-or-cycle
-    [backtab] #'company-select-previous    ))
+    [backtab] #'company-select-previous))
 
+(defun notify-send (msg)
+  (interactive)
+  (shell-command (concat "notify-send '" msg "'")))
 
+(defun notify-line ()
+  (interactive)
+  (notify-send (concat "line: " (number-to-string (line-number-at-pos)))))
 
+(defun cider-interactive-notify-and-eval (code)
+  (interactive)
+  (notify-send code)
+  (cider-interactive-eval
+   code
+   (cider-interactive-eval-handler nil (point))
+   nil
+   nil))
+
+(defun notespace/eval-and-realize-note-at-this-line ()
+  (interactive)
+  (save-buffer)
+  (cider-interactive-notify-and-eval
+   (concat "(notespace.api/eval-and-realize-note-at-line "
+           (number-to-string (line-number-at-pos))
+           ")")))
+
+(defun notespace/eval-and-realize-notes-from-line ()
+  (interactive)
+  (save-buffer)
+  (cider-interactive-notify-and-eval
+   (concat "(notespace.api/eval-and-realize-notes-from-line "
+           (number-to-string (line-number-at-pos))
+           ")")))
+
+(defun notespace/init-with-browser ()
+  (interactive)
+  (save-buffer)
+  (cider-interactive-notify-and-eval
+   (concat "(notespace.api/init-with-browser)")))
+
+(defun notespace/init ()
+  (interactive)
+  (save-buffer)
+  (cider-interactive-notify-and-eval
+   (concat "(notespace.api/init)")))
+
+(defun notespace/eval-this-notespace ()
+  (interactive)
+  (save-buffer)
+  (cider-interactive-notify-and-eval
+   "(notespace.api/eval-this-notespace)"))
+
+(defun notespace/eval-and-realize-this-notespace ()
+  (interactive)
+  (save-buffer)
+  (cider-interactive-notify-and-eval
+   "(notespace.api/eval-and-realize-this-notespace)"))
+
+(defun notespace/render-static-html ()
+  (interactive)
+  (cider-interactive-notify-and-eval
+   "(notespace.api/render-static-html)"))
+
+(map! (:localleader
+       (:map (clojure-mode-map)
+        (:prefix ("N" . "Notespace")
+         "e" #'notespace/eval-this-notespace
+         "r" #'notespace/eval-and-realize-this-notespace
+         "n" #'notespace/eval-and-realize-note-at-this-line
+         "l" #'notespace/eval-and-realize-notes-from-line
+         "s" #'notespace/render-static-html
+         (:prefix ("I" . "Init")
+          "i b" #'notespace/init-with-browser
+          "i i" #'notespace/init)))))
+         
+        
+
+(setq cider-print-quota 10000)
+(setq cider-repl-buffer-size-limit 10000)
+(setq cider-use-overlays t)
+(xclip-mode)
 ;; (require 'mouse)
 ;; (xterm-mouse-mode -1)
-(global-undo-tree-mode 1)
+;(global-undo-tree-mode 1)
 (toggle-frame-fullscreen)
+(require 'cider-eval-sexp-fu)
+;;; os/exwm/config.el -*- lexical-binding: t; -*-
+
+
+(setq! highlight-indent-guides-responsive 'top)
+(setq! highlight-indent-guides-method 'bitmap)
+
+(setq! cider-clojure-cli-global-options "-Atest")
+(setq! cider-lein-global-options "with-profile test")
+
+(use-package company-box
+  :hook (company-mode . company-box-mode))
+
+(use-package parinfer-rust-mode
+  :hook clojure-mode
+    :init
+    (setq parinfer-rust-auto-download t))

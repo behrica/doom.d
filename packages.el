@@ -42,3 +42,9 @@
 ;(package! builtin-package-2 :recipe (:repo "myfork/package"))
 
 (package! xclip)
+(package! cider-eval-sexp-fu)
+(package! company-quickhelp)
+(package! vega-view)
+(package! company-box)
+(package! indium)
+(package! parinfer-rust-mode)
