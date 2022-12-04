@@ -54,7 +54,10 @@
 (after! cider
   (add-hook 'company-completion-started-hook 'custom/set-company-maps)
   (add-hook 'company-completion-finished-hook 'custom/unset-company-maps)
-  (add-hook 'company-completion-cancelled-hook 'custom/unset-company-maps))
+  (add-hook 'company-completion-cancelled-hook 'custom/unset-company-maps)
+  (define-key clojure-mode-map (kbd "C-c c c") 'clerk-show)
+  (define-key clojure-mode-map (kbd "C-c c b") 'clerk-show-buffer)
+  (define-key clojure-mode-map (kbd "C-c c t s") 'clerk-tap-sexp-at-point-with-viewer))
 
 (defun custom/unset-company-maps (&rest unused)
   "Set default mappings (outside of company).
@@ -169,6 +172,49 @@
   (cider-interactive-notify-and-eval
    "(notespace.api/render-static-html)"))
 
+(defun buffer-whole-string (buffer)
+  (with-current-buffer buffer
+    (remove-overlays nil nil 'cider-temporary t)
+    (cider--clear-compilation-highlights)
+    (cider--quit-error-window)
+    (save-restriction
+      (widen)
+      (buffer-substring-no-properties (point-min) (point-max)))))
+
+(defun clerk-show-buffer-2 ()
+  (interactive)
+  (save-buffer)
+  (message "%s" (prin1-to-string (buffer-whole-string (current-buffer))))
+  (cider-interactive-eval
+   (concat "(nextjournal.clerk/show! (java.io.StringReader.  \""  (prin1-to-string (buffer-whole-string (current-buffer))) "\" ))")))
+
+(defun clerk-show-buffer ()
+  (interactive)
+  (save-buffer)
+(write-region (buffer-whole-string (current-buffer)) nil "/tmp/dummy.clj")
+  (let
+      ((filename
+        (buffer-file-name)))
+    (when filename
+      (cider-interactive-eval
+       (concat "(nextjournal.clerk/show! \"/tmp/dummy.clj\" )")))))
+
+
+
+
+(defun clerk-show ()
+  (interactive)
+  (save-buffer)
+
+  (let
+      ((filename
+        (buffer-file-name)))
+    (when filename
+      (cider-interactive-eval
+       (concat "(nextjournal.clerk/show! \"" (tramp-file-local-name filename) "\")")))))
+
+
+
 (map! (:localleader
        (:map (clojure-mode-map)
         (:prefix ("N" . "Notespace")
@@ -186,6 +232,7 @@
 (setq cider-print-quota 10000)
 (setq cider-repl-buffer-size-limit 10000)
 (setq cider-use-overlays t)
+(setq cljr-hotload-dependencies t)
 (xclip-mode)
 ;; (require 'mouse)
 ;; (xterm-mouse-mode -1)
@@ -201,6 +248,9 @@
 (setq! cider-clojure-cli-global-options "-Atest")
 (setq! cider-lein-global-options "with-profile test")
 
+
+(setq cider-clojure-cli-global-options "-J-XX:-OmitStackTraceInFastThrow")
+
 (use-package company-box
   :hook (company-mode . company-box-mode))
 
@@ -208,3 +258,149 @@
   :hook clojure-mode
     :init
     (setq parinfer-rust-auto-download t))
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/eaf")
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/eaf/core")
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/eaf/app/browser")
+(require 'eaf)
+(require 'eaf-browser)
+
+
+;; (use-package eaf
+;;   :load-path "/usr/share/emacs/site-lisp/eaf"
+;;   :custom
+;;                                         ; See https://github.com/emacs-eaf/emacs-application-framework/wiki/Customization
+;;   (eaf-browser-continue-where-left-off t)
+;;   (eaf-browser-enable-adblocker t)
+;;   (browse-url-browser-function 'eaf-open-browser)
+;;   :config
+;;   (defalias 'browse-web #'eaf-open-browser)
+;;   (eaf-bind-key scroll_up "C-n" eaf-pdf-viewer-keybinding)
+;;   (eaf-bind-key scroll_down "C-p" eaf-pdf-viewer-keybinding)
+;;   (eaf-bind-key take_photo "p" eaf-camera-keybinding)
+;;   (eaf-bind-key nil "M-q" eaf-browser-keybinding))
+
+
+(setq conda-anaconda-home "/opt/miniconda3")
+(setq conda-env-executables-dir "bin")
+
+
+
+;; (defun cider-tap (&rest r) ; inspired by https://github.com/clojure-emacs/cider/issues/3094
+;;   (cons (concat "(let [__value "
+;;                 (caar r)
+;;                 "] (tap> {:clay-tap? true :form (quote " (caar r) ") :value __value}) __value)")
+;;         (cdar r)))
+
+;; (advice-add 'cider-nrepl-request:eval
+;; :filter-args #'cider-tap)
+
+
+(defun clay-require ()
+    (interactive)
+    (cider-nrepl-sync-request:eval
+           ""))
+
+(defun clay-init ()
+    (interactive)
+    (cider-nrepl-sync-request:eval ""))
+
+(defun portal.api/open ()
+  (interactive)
+  (cider-nrepl-sync-request:eval
+    "(do (ns dev) (def portal ((requiring-resolve 'portal.api/open))) (add-tap (requiring-resolve 'portal.api/submit)))"))
+
+(defun portal.api/clear ()
+  (interactive)
+  (cider-nrepl-sync-request:eval "(portal.api/clear)"))
+
+(defun portal.api/close ()
+  (interactive)
+  (cider-nrepl-sync-request:eval "(portal.api/close)"))
+
+
+
+(defun clojure-run-scratch-clj ()
+  (interactive)
+  (cider-interactive-eval "(load-file \"/home/carsten/.clojure/scratch.clj\")"
+                          nil
+                          nil
+                          nil)
+
+  )
+
+
+
+(defun clojure-defsc-last ()
+  (interactive)
+  (cider-interactive-eval "(eval `(sc.api/defsc ~(sc.api/last-ep-id)))"
+                          nil
+                          nil
+                          nil))
+
+
+(setq org-agenda-files (list "~/Dropbox/sync/org/todos.org"))
+
+
+
+
+(setq clerk-viewer-list '("default"
+                          ":html"
+                          ":latex"
+                          ":table"
+                          "nextjournal.clerk.viewer/html-viewer"
+                          "nextjournal.clerk.viewer/vega-lite-viewer"
+                          "nextjournal.clerk.viewer/map-viewer"
+                          "nextjournal.clerk.viewer/markdown-viewer"
+                          "nextjournal.clerk.viewer/katex-viewer"
+                          "nextjournal.clerk.viewer/fallback-viewer"
+                          "nextjournal.clerk.viewer/string-viewer"))
+
+(defun clerk-tap-last-sexp-with-viewer (viewer)
+  (interactive
+   (list (completing-read "Choose viewer: " clerk-viewer-list nil t)))
+
+  (let ((tapped-form (concat "(clojure.core/->> "
+                             (cider-last-sexp)
+                             (if (equal "default" viewer)
+                                 (concat " (nextjournal.clerk/with-viewer {:transform-fn identity})")
+                               (if (string-prefix-p ":" viewer)
+                                   (concat " (nextjournal.clerk/with-viewer " "(keyword \"" (substring viewer 1) "\")" ")")
+                                   (concat " (nextjournal.clerk/with-viewer " "(symbol \"" viewer "\")" ")"))
+                               )
+
+                             " (clojure.core/tap>))")))
+    (cider-interactive-eval tapped-form
+                            nil
+                            nil
+                            (cider--nrepl-pr-request-map))))
+
+
+(defun clerk-tap-sexp-at-point-with-viewer (viewer)
+  (interactive
+   (list (completing-read "Choose viewer: " clerk-viewer-list  nil t)))
+
+  (save-excursion
+    (goto-char (cadr (cider-sexp-at-point 'bounds)))
+    (clerk-tap-last-sexp-with-viewer viewer)))
+
+(defun clerk-open-tap-inspector ()
+  (interactive)
+  (cider-nrepl-sync-request:eval
+   (concat "(require '[nextjournal.clerk :as clerk])"
+           "(clerk/serve! {:browse true})"
+           "(Thread/sleep 1000)"
+           "(nextjournal.clerk/show! 'nextjournal.clerk.tap)")
+
+
+   ))
+
+
+(after! tramp
+  (setq tramp-inline-compress-start-size 1000)
+  (setq tramp-copy-size-limit 10000)
+  (setq vc-handled-backends '(Git))
+  (setq tramp-verbose 1)
+  (setq tramp-default-method "scp")
+  (setq tramp-use-ssh-controlmaster-options nil)
+  (setq projectile--mode-line "Projectile")
+  (setq tramp-verbose 1))
