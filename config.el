@@ -245,11 +245,11 @@
 (setq! highlight-indent-guides-responsive 'top)
 (setq! highlight-indent-guides-method 'bitmap)
 
-(setq! cider-clojure-cli-global-options "-Atest")
+
 (setq! cider-lein-global-options "with-profile test")
 
 
-(setq cider-clojure-cli-global-options "-J-XX:-OmitStackTraceInFastThrow")
+(setq cider-clojure-cli-global-options "-J-XX:-OmitStackTraceInFastThrow -Atest:add-foreign")
 
 (use-package company-box
   :hook (company-mode . company-box-mode))
@@ -382,6 +382,17 @@
   (save-excursion
     (goto-char (cadr (cider-sexp-at-point 'bounds)))
     (clerk-tap-last-sexp-with-viewer viewer)))
+
+(defun cider-tap (&rest r)
+  (cons (concat "(let [__value "
+                (caar r)
+                "] (tap> __value) __value)")
+        (cdar r)))
+
+(defun clerk-nrepl-auto-tap ()
+    (interactive)
+    (advice-add 'cider-nrepl-request:eval
+                :filter-args #'cider-tap))
 
 (defun clerk-open-tap-inspector ()
   (interactive)
