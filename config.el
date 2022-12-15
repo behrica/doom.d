@@ -127,50 +127,6 @@
    nil
    nil))
 
-(defun notespace/eval-and-realize-note-at-this-line ()
-  (interactive)
-  (save-buffer)
-  (cider-interactive-notify-and-eval
-   (concat "(notespace.api/eval-and-realize-note-at-line "
-           (number-to-string (line-number-at-pos))
-           ")")))
-
-(defun notespace/eval-and-realize-notes-from-line ()
-  (interactive)
-  (save-buffer)
-  (cider-interactive-notify-and-eval
-   (concat "(notespace.api/eval-and-realize-notes-from-line "
-           (number-to-string (line-number-at-pos))
-           ")")))
-
-(defun notespace/init-with-browser ()
-  (interactive)
-  (save-buffer)
-  (cider-interactive-notify-and-eval
-   (concat "(notespace.api/init-with-browser)")))
-
-(defun notespace/init ()
-  (interactive)
-  (save-buffer)
-  (cider-interactive-notify-and-eval
-   (concat "(notespace.api/init)")))
-
-(defun notespace/eval-this-notespace ()
-  (interactive)
-  (save-buffer)
-  (cider-interactive-notify-and-eval
-   "(notespace.api/eval-this-notespace)"))
-
-(defun notespace/eval-and-realize-this-notespace ()
-  (interactive)
-  (save-buffer)
-  (cider-interactive-notify-and-eval
-   "(notespace.api/eval-and-realize-this-notespace)"))
-
-(defun notespace/render-static-html ()
-  (interactive)
-  (cider-interactive-notify-and-eval
-   "(notespace.api/render-static-html)"))
 
 (defun buffer-whole-string (buffer)
   (with-current-buffer buffer
@@ -214,25 +170,10 @@
        (concat "(nextjournal.clerk/show! \"" (tramp-file-local-name filename) "\")")))))
 
 
-
-(map! (:localleader
-       (:map (clojure-mode-map)
-        (:prefix ("N" . "Notespace")
-         "e" #'notespace/eval-this-notespace
-         "r" #'notespace/eval-and-realize-this-notespace
-         "n" #'notespace/eval-and-realize-note-at-this-line
-         "l" #'notespace/eval-and-realize-notes-from-line
-         "s" #'notespace/render-static-html
-         (:prefix ("I" . "Init")
-          "i b" #'notespace/init-with-browser
-          "i i" #'notespace/init)))))
-         
-        
-
 (setq cider-print-quota 10000)
 (setq cider-repl-buffer-size-limit 10000)
 (setq cider-use-overlays t)
-(setq cljr-hotload-dependencies t)
+(setq cljr-hotlad-dependencies t)
 (xclip-mode)
 ;; (require 'mouse)
 ;; (xterm-mouse-mode -1)
@@ -258,76 +199,10 @@
   :hook clojure-mode
     :init
     (setq parinfer-rust-auto-download t))
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/eaf")
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/eaf/core")
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/eaf/app/browser")
-(require 'eaf)
-(require 'eaf-browser)
-
-
-;; (use-package eaf
-;;   :load-path "/usr/share/emacs/site-lisp/eaf"
-;;   :custom
-;;                                         ; See https://github.com/emacs-eaf/emacs-application-framework/wiki/Customization
-;;   (eaf-browser-continue-where-left-off t)
-;;   (eaf-browser-enable-adblocker t)
-;;   (browse-url-browser-function 'eaf-open-browser)
-;;   :config
-;;   (defalias 'browse-web #'eaf-open-browser)
-;;   (eaf-bind-key scroll_up "C-n" eaf-pdf-viewer-keybinding)
-;;   (eaf-bind-key scroll_down "C-p" eaf-pdf-viewer-keybinding)
-;;   (eaf-bind-key take_photo "p" eaf-camera-keybinding)
-;;   (eaf-bind-key nil "M-q" eaf-browser-keybinding))
 
 
 (setq conda-anaconda-home "/opt/miniconda3")
 (setq conda-env-executables-dir "bin")
-
-
-
-;; (defun cider-tap (&rest r) ; inspired by https://github.com/clojure-emacs/cider/issues/3094
-;;   (cons (concat "(let [__value "
-;;                 (caar r)
-;;                 "] (tap> {:clay-tap? true :form (quote " (caar r) ") :value __value}) __value)")
-;;         (cdar r)))
-
-;; (advice-add 'cider-nrepl-request:eval
-;; :filter-args #'cider-tap)
-
-
-(defun clay-require ()
-    (interactive)
-    (cider-nrepl-sync-request:eval
-           ""))
-
-(defun clay-init ()
-    (interactive)
-    (cider-nrepl-sync-request:eval ""))
-
-(defun portal.api/open ()
-  (interactive)
-  (cider-nrepl-sync-request:eval
-    "(do (ns dev) (def portal ((requiring-resolve 'portal.api/open))) (add-tap (requiring-resolve 'portal.api/submit)))"))
-
-(defun portal.api/clear ()
-  (interactive)
-  (cider-nrepl-sync-request:eval "(portal.api/clear)"))
-
-(defun portal.api/close ()
-  (interactive)
-  (cider-nrepl-sync-request:eval "(portal.api/close)"))
-
-
-
-(defun clojure-run-scratch-clj ()
-  (interactive)
-  (cider-interactive-eval "(load-file \"/home/carsten/.clojure/scratch.clj\")"
-                          nil
-                          nil
-                          nil)
-
-  )
-
 
 
 (defun clojure-defsc-last ()
