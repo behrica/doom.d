@@ -57,6 +57,7 @@
   (add-hook 'company-completion-cancelled-hook 'custom/unset-company-maps)
   (define-key clojure-mode-map (kbd "C-c c c") 'clerk-show)
   (define-key clojure-mode-map (kbd "C-c c b") 'clerk-show-buffer)
+  (define-key cider-inspector-mode-map (kbd "<normal-state> t") 'cider-inspector-tap-current-val-with-clerk-viewer)
   (define-key clojure-mode-map (kbd "C-c c t s") 'clerk-tap-sexp-at-point-with-viewer))
 
 (defun custom/unset-company-maps (&rest unused)
@@ -109,23 +110,6 @@
     "TAB"     #'company-complete-common-or-cycle
     [tab]     #'company-complete-common-or-cycle
     [backtab] #'company-select-previous))
-
-(defun notify-send (msg)
-  (interactive)
-  (shell-command (concat "notify-send '" msg "'")))
-
-(defun notify-line ()
-  (interactive)
-  (notify-send (concat "line: " (number-to-string (line-number-at-pos)))))
-
-(defun cider-interactive-notify-and-eval (code)
-  (interactive)
-  (notify-send code)
-  (cider-interactive-eval
-   code
-   (cider-interactive-eval-handler nil (point))
-   nil
-   nil))
 
 
 (defun buffer-whole-string (buffer)
@@ -216,23 +200,62 @@
 (setq org-agenda-files (list "~/Dropbox/sync/org/todos.org"))
 
 
+(defun clerk-get-current-viewers ()
+
+  (read
+   (nrepl-dict-get
+    (nrepl-sync-request:eval
+        "
+ (do
+ (require 'nextjournal.clerk)
+ 
+ (conj
+  (->>
+   (nextjournal.clerk/get-default-viewers)
+   (map :name)
+   (remove nil?))
+  :default))
+"
+     (cider-current-connection))
+    "value")))
+
+;;  Call while in `cider-inspector` to show current value in Cler after a viewer is selected
+(defun cider-inspector-tap-current-val-with-clerk-viewer (viewer)
+  (interactive
+   (list (completing-read "Choose viewer: " (clerk-get-current-viewers)
+                          nil t)))
+
+  (setq cider-inspector--current-repl (cider-current-repl))
+  ;; pick some random name, which hopeuflly is never used...
+  (when-let* ((ns "user")
+              (var-name "cider-inspector-temp-hdhsad-hbjdbasjd842342")
+              (value (cider-sync-request:inspect-def-current-val ns var-name)))
+
+    (let ((tapped-form (concat "(clojure.core/->> "
+                               (concat ns "/" var-name)
+                               (if (equal ":default" viewer)
+                                   (concat " (nextjournal.clerk/with-viewer {:transform-fn identity})")
+                                 (if (string-prefix-p ":" viewer)
+                                     (concat " (nextjournal.clerk/with-viewer " "(keyword \"" (substring viewer 1) "\")" ")")
+                                   (concat " (nextjournal.clerk/with-viewer " "(symbol \"" viewer "\")" ")"))
+                                 )
+
+                               " (clojure.core/tap>))")))
+      (cider-interactive-eval tapped-form
+                              nil
+                              nil
+                              (cider--nrepl-pr-request-map)))
 
 
-(setq clerk-viewer-list '("default"
-                          ":html"
-                          ":latex"
-                          ":table"
-                          "nextjournal.clerk.viewer/html-viewer"
-                          "nextjournal.clerk.viewer/vega-lite-viewer"
-                          "nextjournal.clerk.viewer/map-viewer"
-                          "nextjournal.clerk.viewer/markdown-viewer"
-                          "nextjournal.clerk.viewer/katex-viewer"
-                          "nextjournal.clerk.viewer/fallback-viewer"
-                          "nextjournal.clerk.viewer/string-viewer"))
+    (message "%s#'%s/%s = %s" cider-eval-result-prefix ns var-name value)))
+
+
+
+
 
 (defun clerk-tap-last-sexp-with-viewer (viewer)
   (interactive
-   (list (completing-read "Choose viewer: " clerk-viewer-list nil t)))
+   (list (completing-read "Choose viewer: " (clerk-get-current-viewers) nil t)))
 
   (let ((tapped-form (concat "(clojure.core/->> "
                              (cider-last-sexp)
@@ -240,7 +263,7 @@
                                  (concat " (nextjournal.clerk/with-viewer {:transform-fn identity})")
                                (if (string-prefix-p ":" viewer)
                                    (concat " (nextjournal.clerk/with-viewer " "(keyword \"" (substring viewer 1) "\")" ")")
-                                   (concat " (nextjournal.clerk/with-viewer " "(symbol \"" viewer "\")" ")"))
+                                 (concat " (nextjournal.clerk/with-viewer " "(symbol \"" viewer "\")" ")"))
                                )
 
                              " (clojure.core/tap>))")))
@@ -252,7 +275,7 @@
 
 (defun clerk-tap-sexp-at-point-with-viewer (viewer)
   (interactive
-   (list (completing-read "Choose viewer: " clerk-viewer-list  nil t)))
+   (list (completing-read "Choose viewer: " (clerk-get-current-viewers)  nil t)))
 
   (save-excursion
     (goto-char (cadr (cider-sexp-at-point 'bounds)))
@@ -273,12 +296,10 @@
   (interactive)
   (cider-nrepl-sync-request:eval
    (concat "(require '[nextjournal.clerk :as clerk])"
+           "(nextjournal.clerk/show! 'nextjournal.clerk.tap)"
            "(clerk/serve! {:browse true})"
-           "(Thread/sleep 1000)"
-           "(nextjournal.clerk/show! 'nextjournal.clerk.tap)")
 
-
-   ))
+           )))
 
 
 (after! tramp

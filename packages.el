@@ -48,3 +48,4 @@
 (package! company-box)
 (package! indium)
 (package! parinfer-rust-mode)
+(package! clomacs)
