@@ -25,6 +25,7 @@
        ;; ivy                              ; a search engine for love and life
 
        :ui
+       (ligatures +fira)
        ;;deft              ; notational velocity for Emacs
        doom            ; what makes DOOM look the way it does
        doom-dashboard  ; a nifty splash screen for Emacs
@@ -35,12 +36,12 @@
        indent-guides   ; highlighted indent columns
        modeline        ; snazzy, Atom-inspired modeline, plus API
        ;;nav-flash         ; blink cursor line after big motions
-       neotree           ; a project drawer, like NERDTree for vim
-       ophints                ; highlight the region an operation acts on
-       (popup +defaults)      ; tame sudden yet inevitable temporary windows
-       (pretty-code +fira)      ; ligatures or substitute text with pretty symbols
+       neotree                    ; a project drawer, like NERDTree for vim
+       ophints                    ; highlight the region an operation acts on
+       (popup +defaults)          ; tame sudden yet inevitable temporary windows
+       ;;(pretty-code +fira)      ; ligatures or substitute text with pretty symbols
        ;;tabs              ; an tab bar for Emacs
-       ;;treemacs          ; a project drawer, like neotree but cooler
+       treemacs                      ; a project drawer, like neotree but cooler
        ;;unicode           ; extended unicode support for various languages
        vc-gutter        ; vcs diff in the fringe
        vi-tilde-fringe  ; fringe tildes to mark beyond EOB
@@ -54,18 +55,18 @@
        fold                           ; (nigh) universal code folding
        ;;(format +onsave)  ; automated prettiness
        ;;god               ; run Emacs commands without modifier keys
-       lispy    ; vim for lisp, for people who don't like vim
-       ;; ;; ;;multiple-cursors  ; editing in many places at once
-       ;; ;; ;;objed             ; text object editing for the innocent
-       ;; ;; ;;parinfer          ; turn lisp into python, sort of
-       ;;
-       ;; ;; ;;rotate-text       ; cycle region at point between text candidates
-       snippets
-       ;;                                  ; my elves. They type so I don't have to
-       ;; ;;word-wrap         ; soft wrapping with language-aware indent
+       lispy ; vim for lisp, for people who don't like vim
+       ;; ;; ;; ;; ;; ;;multiple-cursors  ; editing in many places at once
+       ;; ;; ;; ;; ;; ;;objed             ; text object editing for the innocent
+       ;; ;; ;; ;; ;; ;;parinfer          ; turn lisp into python, sort of
+       ;; ;; ;; ;;
+       ;; ;; ;; ;; ;; ;;rotate-text       ; cycle region at point between text candidates
+       ;; ;; ;; snippets
+       ;; ;; ;;                                  ; my elves. They type so I don't have to
+       ;; ;; ;; ;;word-wrap         ; soft wrapping with language-aware indent
 
-       :desktop
-       ;; exwm
+       ;; ;; :desktop
+       ;; ;; exwm
        :emacs
        dired             ; making dired pretty [functional]
        electric          ; smarter, keyword-based electric-indent
@@ -94,7 +95,7 @@
        ;;ein               ; tame Jupyter notebooks with emacs
        (eval +overlay)       ; run code, run (also, repls)
        ;;gist              ; interacting with github gists
-       lookup                    ; navigate your code and its documentation
+       lookup                         ; navigate your code and its documentation
        lsp
        ;;macos             ; MacOS-specific commands
        magit                     ; a git porcelain for Emacs
@@ -110,7 +111,7 @@
        :lang
        ;;agda              ; types of types of types of types...
        ;;cc                ; C/C++/Obj-C madness
-       (clojure +lsp)                       ; java with a lisp
+       (clojure +lsp)                   ; java with a lisp
        ;; common-lisp       ; if you've seen one lisp, you've seen them all
        ;; ;;coq               ; proofs-as-programs
        ;; ;;crystal           ; ruby at the speed of c
@@ -142,14 +143,14 @@
        ;;lua               ; one-based indices? one-based indices
        markdown      ; writing docs for people to ignore
        ;;nim               ; python + lisp at the speed of c
-       nix               ; I hereby declare "nix geht mehr!"
+       nix           ; I hereby declare "nix geht mehr!"
        ;;ocaml             ; an objective camel
        org           ; organize your plain life in plain text
        ;;perl              ; write code no one else can comprehend
        ;;php               ; perl's insecure younger brother
        ;;plantuml          ; diagrams for confusing people more
        ;;purescript        ; javascript, but functional
-       (python +conda +pyenv)              ; beautiful is better than ugly
+       (python +conda +pyenv)           ; beautiful is better than ugly
        ;;qt                ; the 'cutest' gui framework ever
        ;;racket            ; a DSL for DSLs
        ;;rest              ; Emacs as a REST client
@@ -179,4 +180,4 @@
 
        :config
        ;;literate
-       (default +bindings +smartparens))
+       (default +bindings +smartparents))

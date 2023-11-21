@@ -140,20 +140,6 @@
        (concat "(nextjournal.clerk/show! \"/tmp/dummy.clj\" )")))))
 
 
-
-
-(defun clerk-show ()
-  (interactive)
-  (save-buffer)
-
-  (let
-      ((filename
-        (buffer-file-name)))
-    (when filename
-      (cider-interactive-eval
-       (concat "(nextjournal.clerk/show! \"" (tramp-file-local-name filename) "\")")))))
-
-
 (setq cider-print-quota 10000)
 (setq cider-repl-buffer-size-limit 10000)
 (setq cider-use-overlays t)
@@ -164,7 +150,6 @@
 ;(global-undo-tree-mode 1)
 (toggle-frame-fullscreen)
 (require 'cider-eval-sexp-fu)
-;;; os/exwm/config.el -*- lexical-binding: t; -*-
 
 
 (setq! highlight-indent-guides-responsive 'top)
@@ -174,7 +159,6 @@
 (setq! cider-lein-global-options "with-profile test")
 
 
-(setq cider-clojure-cli-global-options "-J-XX:-OmitStackTraceInFastThrow -Atest:add-foreign")
 
 (use-package company-box
   :hook (company-mode . company-box-mode))
@@ -200,114 +184,205 @@
 (setq org-agenda-files (list "~/Dropbox/sync/org/todos.org"))
 
 
-(defun clerk-get-current-viewers ()
-
-  (read
-   (nrepl-dict-get
-    (nrepl-sync-request:eval
-        "
- (do
- (require 'nextjournal.clerk)
- 
- (conj
-  (->>
-   (nextjournal.clerk/get-default-viewers)
-   (map :name)
-   (remove nil?))
-  :default))
-"
-     (cider-current-connection))
-    "value")))
-
-;;  Call while in `cider-inspector` to show current value in Cler after a viewer is selected
-(defun cider-inspector-tap-current-val-with-clerk-viewer (viewer)
-  (interactive
-   (list (completing-read "Choose viewer: " (clerk-get-current-viewers)
-                          nil t)))
-
-  (setq cider-inspector--current-repl (cider-current-repl))
-  ;; pick some random name, which hopeuflly is never used...
-  (when-let* ((ns "user")
-              (var-name "cider-inspector-temp-hdhsad-hbjdbasjd842342")
-              (value (cider-sync-request:inspect-def-current-val ns var-name)))
-
-    (let ((tapped-form (concat "(clojure.core/->> "
-                               (concat ns "/" var-name)
-                               (if (equal ":default" viewer)
-                                   (concat " (nextjournal.clerk/with-viewer {:transform-fn identity})")
-                                 (if (string-prefix-p ":" viewer)
-                                     (concat " (nextjournal.clerk/with-viewer " "(keyword \"" (substring viewer 1) "\")" ")")
-                                   (concat " (nextjournal.clerk/with-viewer " "(symbol \"" viewer "\")" ")"))
-                                 )
-
-                               " (clojure.core/tap>))")))
-      (cider-interactive-eval tapped-form
-                              nil
-                              nil
-                              (cider--nrepl-pr-request-map)))
-
-
-    (message "%s#'%s/%s = %s" cider-eval-result-prefix ns var-name value)))
 
 
 
 
 
-(defun clerk-tap-last-sexp-with-viewer (viewer)
-  (interactive
-   (list (completing-read "Choose viewer: " (clerk-get-current-viewers) nil t)))
-
-  (let ((tapped-form (concat "(clojure.core/->> "
-                             (cider-last-sexp)
-                             (if (equal "default" viewer)
-                                 (concat " (nextjournal.clerk/with-viewer {:transform-fn identity})")
-                               (if (string-prefix-p ":" viewer)
-                                   (concat " (nextjournal.clerk/with-viewer " "(keyword \"" (substring viewer 1) "\")" ")")
-                                 (concat " (nextjournal.clerk/with-viewer " "(symbol \"" viewer "\")" ")"))
-                               )
-
-                             " (clojure.core/tap>))")))
-    (cider-interactive-eval tapped-form
-                            nil
-                            nil
-                            (cider--nrepl-pr-request-map))))
-
-
-(defun clerk-tap-sexp-at-point-with-viewer (viewer)
-  (interactive
-   (list (completing-read "Choose viewer: " (clerk-get-current-viewers)  nil t)))
-
-  (save-excursion
-    (goto-char (cadr (cider-sexp-at-point 'bounds)))
-    (clerk-tap-last-sexp-with-viewer viewer)))
-
-(defun cider-tap (&rest r)
-  (cons (concat "(let [__value "
-                (caar r)
-                "] (tap> __value) __value)")
-        (cdar r)))
-
-(defun clerk-nrepl-auto-tap ()
-    (interactive)
-    (advice-add 'cider-nrepl-request:eval
-                :filter-args #'cider-tap))
-
-(defun clerk-open-tap-inspector ()
-  (interactive)
-  (cider-nrepl-sync-request:eval
-   (concat "(require '[nextjournal.clerk :as clerk])"
-           "(nextjournal.clerk/show! 'nextjournal.clerk.tap)"
-           "(clerk/serve! {:browse true})"
-
-           )))
 
 
 (after! tramp
   (setq tramp-inline-compress-start-size 1000)
   (setq tramp-copy-size-limit 10000)
   (setq vc-handled-backends '(Git))
-  (setq tramp-verbose 1)
   (setq tramp-default-method "scp")
-  (setq tramp-use-ssh-controlmaster-options nil)
+  (setq tramp-use-ssh-controlmaster-options t)
   (setq projectile--mode-line "Projectile")
-  (setq tramp-verbose 1))
+  (setq tramp-verbose 4)
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+
+)
+
+(custom-set-variables
+ '(tramp-remote-path (quote (tramp-own-remote-path)) nil (tramp)))
+
+(defun print-find-clojure-lsp ()
+  (interactive)
+  (message "exec-path: %s" (exec-path))
+  (message "find-python: %s" (executable-find "clojure-lsp")))
+
+
+(require 'clerk-mode)
+(add-hook 'clojure-mode #'clerk-mode)
+
+
+(after! clerk-mode
+  (define-key clojure-mode-map (kbd "C-c c c") 'clerk-show)
+  ;; (define-key clojure-mode-map (kbd "C-c c b") 'clerk-show-buffer)
+  ;; (define-key cider-inspector-mode-map (kbd "<normal-state> t") 'cider-inspector-tap-current-val-with-clerk-viewer)
+  ;; (define-key clojure-mode-map (kbd "C-c c t s") 'clerk-tap-sexp-at-point-with-viewer)
+  )
+
+
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024)
+      treemacs-space-between-root-nodes nil
+      company-minimum-prefix-length 1
+     )
+
+
+
+(use-package lsp-mode
+  :init
+  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+  (setq lsp-enable-indentation nil)
+  (setq lsp-completion-enable nil)
+  (setq lsp-keymap-prefix "C-c l")
+  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+         ;; (clojure-mode . lsp)
+         ;; if you want which-key integration
+         (lsp-mode . lsp-enable-which-key-integration))
+  :commands lsp)
+
+
+(after! lsp-mode
+
+
+  (lsp-register-client
+   (make-lsp-client :new-connection (lsp-tramp-connection "clojure-lsp")
+                    :major-modes '(clojure-mode)
+                    :remote? t
+                    :server-id 'clojure-lsp-remote)))
+
+
+
+;; (lsp-register-client
+
+;;  (make-lsp-client
+;;   :semantic-tokens-faces-overrides '(:types (("macro" . font-lock-keyword-face)
+;;                                              ("keyword" . clojure-keyword-face)
+;;                                              ("event" . default)))
+;;   :new-connection (lsp-tramp-connection "clojure-lsp")   :major-modes '(clojure-mode clojurec-mode clojurescript-mode)
+;;   :library-folders-fn (lambda (_workspace) (list lsp-clojure-workspace-cache-dir))
+;;   uri-handlers (lsp-ht ("jar" #'lsp-clojure--file-in-jar))
+;;   :tion-handlers (lsp-ht ("code-lens-references" #'lsp-clojure--show-references))
+;;   :notification-handlers (lsp-ht ("clojure/textDocument/testTree" #'lsp-clojure--handle-test-tree))
+;;   :initialization-options '(:dependency-scheme "jar"
+;;                             :show-docs-arity-on-same-line? t)
+;;   :custom-capabilities `((experimental . ((testTree . ,(and (require 'lsp-treemacs nil t) t)))))
+;;   :remote? t
+;;   :server-id 'clojure-lsp-remote))
+
+(defun clay/start ()
+  (interactive)
+  (cider-interactive-eval "
+    (require '[scicloj.clay.v2.api])
+    (scicloj.clay.v2.api/start!)")
+  t)
+
+(defun clay/show-namespace ()
+  (interactive)
+  (clay/start)
+  (save-buffer)
+  (let
+      ((filename
+        (buffer-file-name)))
+    (when filename
+      (cider-interactive-eval
+       (concat "(scicloj.clay.v2.api/show-namespace! \"" filename "\" {})")))))
+
+(defun clay/show-namespace-and-write-html ()
+  (interactive)
+  (clay/start)
+  (save-buffer)
+  (let
+      ((filename
+        (buffer-file-name)))
+    (when filename
+      (cider-interactive-eval
+       (concat "(scicloj.clay.v2.api/show-namespace-and-write-html! \"" filename "\" {:toc? true})")))))
+
+(defun clay/generate-and-show-namespace-quarto ()
+  (interactive)
+  (clay/start)
+  (save-buffer)
+  (let
+      ((filename
+        (buffer-file-name)))
+    (when filename
+      (cider-interactive-eval
+       (concat "(scicloj.clay.v2.api/generate-and-show-namespace-quarto! \"" filename "\" {})")))))
+
+(defun clay/generate-namespace-light-quarto ()
+  (interactive)
+  (clay/start)
+  (save-buffer)
+  (let
+      ((filename
+        (buffer-file-name)))
+    (when filename
+      (cider-interactive-eval
+       (concat "(scicloj.clay.v2.api/generate-namespace-light-quarto! \"" filename "\" {})")))))
+
+(defun clay/cider-interactive-notify-and-eval (code)
+  (cider-interactive-eval
+   code
+   (cider-interactive-eval-handler nil (point))
+   nil
+   nil))
+
+
+(defun clay/send (code)
+  (clay/start)
+  (clay/cider-interactive-notify-and-eval
+   (concat "(scicloj.clay.v2.api/handle-form! (quote " code "))")))
+
+(defun clay/send-last-sexp ()
+  (interactive)
+  (clay/start)
+  (clay/send (cider-last-sexp)))
+
+(defun clay/send-defun-at-point ()
+  (interactive)
+  (clay/start)
+  (clay/send (thing-at-point 'defun)))
+
+
+
+(defun clojure-tap (&rest r)
+  (cons (concat "(let [__value "
+                (caar r)
+                "] (tap> __value) __value)")
+        (cdar r)))
+
+(defun cider-nrepl-enable-auto-tap ()
+    (interactive)
+    (advice-add 'cider-nrepl-request:eval
+                :filter-args #'clojure-tap))
+
+(defun cider-copy-jack-in (params)
+
+  (interactive "P")
+  (let ((params (thread-first params
+                  (cider--update-project-dir)
+                  (cider--update-jack-in-cmd))))
+    (kill-new (plist-get params :jack-in-cmd))))
+
+
+(defun portal/open ()
+  (interactive)
+  (cider-interactive-eval "
+(require '[portal.api :as p])
+(def p (p/open))
+
+    ")
+  t)
+
+(defun portal/add-tap ()
+  (interactive)
+  (cider-interactive-eval "
+    (add-tap #'p/submit)
+    ")
+  t)
+
+
