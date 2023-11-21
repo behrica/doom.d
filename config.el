@@ -52,64 +52,71 @@
 ;; You can also try 'gd' (or 'C-c g d') to jump to their definition and see how
 ;; they are implemented.
 (after! cider
-  (add-hook 'company-completion-started-hook 'custom/set-company-maps)
-  (add-hook 'company-completion-finished-hook 'custom/unset-company-maps)
-  (add-hook 'company-completion-cancelled-hook 'custom/unset-company-maps)
+
+  ;; (setq tab-always-indent 'complete)
+  (setq cider-repl-buffer-size-limit 100000)
+  (setq cider-repl-tab-command t)
+  ;; (add-hook 'company-completion-started-hook 'custom/set-company-maps)
+  ;; (add-hook 'company-completion-finished-hook 'custom/unset-company-maps)
+  ;; (add-hook 'company-completion-cancelled-hook 'custom/unset-company-maps)
+  (define-key clojure-mode-map (kbd "TAB") 'company-capf)
   (define-key clojure-mode-map (kbd "C-c c c") 'clerk-show)
   (define-key clojure-mode-map (kbd "C-c c b") 'clerk-show-buffer)
   (define-key cider-inspector-mode-map (kbd "<normal-state> t") 'cider-inspector-tap-current-val-with-clerk-viewer)
   (define-key clojure-mode-map (kbd "C-c c t s") 'clerk-tap-sexp-at-point-with-viewer))
 
-(defun custom/unset-company-maps (&rest unused)
-  "Set default mappings (outside of company).
-    Arguments (UNUSED) are ignored."
-  (general-def
-    :states 'insert
-    :keymaps 'override
-    "<down>" nil
-    "<up>"   nil
-    "RET"    nil
-    [return] nil
-    "C-n"    nil
-    "C-p"    nil
-    "C-j"    nil
-    "C-k"    nil
-    "C-h"    nil
-    "C-u"    nil
-    "C-d"    nil
-    "C-s"    nil
-    "C-S-s"   (cond ((featurep! :completion helm) nil)
-                    ((featurep! :completion ivy)  nil))
-    "C-SPC"   nil
-    "TAB"     nil
-    [tab]     nil
-    [backtab] nil))
+(global-set-key (kbd "TAB") #'company-capf)
 
-(defun custom/set-company-maps (&rest unused)
-  "Set maps for when you're inside company completion.
-    Arguments (UNUSED) are ignored."
-  (general-def
-    :states 'insert
-    :keymaps 'override
-    "<down>" #'company-select-next
-    "<up>" #'company-select-previous
-    "RET" #'company-complete
-    [return] #'company-complete
-    "C-w"     nil  ; don't interfere with `evil-delete-backward-word'
-    "C-n"     #'company-select-next
-    "C-p"     #'company-select-previous
-    "C-j"     #'company-select-next
-    "C-k"     #'company-select-previous
-    "C-h"     #'company-show-doc-buffer
-    "C-u"     #'company-previous-page
-    "C-d"     #'company-next-page
-    "C-s"     #'company-filter-candidates
-    "C-S-s"   (cond ((featurep! :completion helm) #'helm-company)
-                    ((featurep! :completion ivy)  #'counsel-company))
-    "C-SPC"   #'company-complete-common
-    "TAB"     #'company-complete-common-or-cycle
-    [tab]     #'company-complete-common-or-cycle
-    [backtab] #'company-select-previous))
+;; (defun custom/unset-company-maps (&rest unused)
+;;   "Set default mappings (outside of company).
+;;     Arguments (UNUSED) are ignored."
+;;   (general-def
+;;     :states 'insert
+;;     :keymaps 'override
+;;     "<down>" nil
+;;     "<up>"   nil
+;;     "RET"    nil
+;;     [return] nil
+;;     "C-n"    nil
+;;     "C-p"    nil
+;;     "C-j"    nil
+;;     "C-k"    nil
+;;     "C-h"    nil
+;;     "C-u"    nil
+;;     "C-d"    nil
+;;     "C-s"    nil
+;;     "C-S-s"   (cond ((featurep! :completion helm) nil)
+;;                     ((featurep! :completion ivy)  nil))
+;;     "C-SPC"   nil
+;;     "TAB"     nil
+;;     [tab]     nil
+;;     [backtab] nil))
+
+;; (defun custom/set-company-maps (&rest unused)
+;;   "Set maps for when you're inside company completion.
+;;     Arguments (UNUSED) are ignored."
+;;   (general-def
+;;     :states 'insert
+;;     :keymaps 'override
+;;     "<down>" #'company-select-next
+;;     "<up>" #'company-select-previous
+;;     "RET" #'company-complete
+;;     [return] #'company-complete
+;;     "C-w"     nil  ; don't interfere with `evil-delete-backward-word'
+;;     "C-n"     #'company-select-next
+;;     "C-p"     #'company-select-previous
+;;     "C-j"     #'company-select-next
+;;     "C-k"     #'company-select-previous
+;;     "C-h"     #'company-show-doc-buffer
+;;     "C-u"     #'company-previous-page
+;;     "C-d"     #'company-next-page
+;;     "C-s"     #'company-filter-candidates
+;;     "C-S-s"   (cond ((featurep! :completion helm) #'helm-company)
+;;                     ((featurep! :completion ivy)  #'counsel-company))
+;;     "C-SPC"   #'company-complete-common
+;;     "TAB"     #'company-complete-common-or-cycle
+;;     [tab]     #'company-complete-common-or-cycle
+;;     [backtab] #'company-select-previous))
 
 
 (defun buffer-whole-string (buffer)
